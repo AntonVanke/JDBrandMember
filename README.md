@@ -75,7 +75,7 @@
 
 4. ### 使用截图
 
-    	![截屏2021-03-08 下午8.20.18](./readme.img/readme1.png)
+   ![截屏2021-03-08 下午8.20.18](https://github.com/AntonVanke/JDBrandMember/blob/main/readme.img/readme1.png?raw=true)
    
 
-    	![截屏2021-03-08 下午8.20.18](./readme.img/readme2.jpg)
+   ![截屏2021-03-08 下午8.20.18](https://github.com/AntonVanke/JDBrandMember/blob/main/readme.img/readme2.jpg?raw=true)
