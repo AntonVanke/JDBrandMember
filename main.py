@@ -72,16 +72,18 @@ def login_by_user():
     return False
 
 
-def brand_member(shop_ID):
+def brand_member(shop_ID=10000, url=None):
     """
     自动入会
+    :param url: 传入的url，默认为空
     :param shop_ID: 店铺ID
     :return:
     """
-    url = "https://mall.jd.com/shopBrandMember-" + str(shop_ID) + ".html"
-    browser.get(url)
-    print_log("DEBUG", "访问店铺链接", url)
     try:
+        if url is None:
+            url = "https://mall.jd.com/shopBrandMember-" + str(shop_ID) + ".html"
+        browser.get(url)
+        print_log("DEBUG", "访问店铺链接", url)
         gift_info = browser.find_element_by_xpath('//*[@id="J_brandMember"]/div[3]/div/ul')
 
         # 判断入会是否赠送京豆
@@ -109,17 +111,32 @@ def brand_member(shop_ID):
         pass
 
 
+def fast_task_main():
+    """
+    利用之前遍历过的`url.txt`快速获取京豆
+    :return:
+    """
+    # 读取 url.txt
+    with open("url.txt", "r", encoding="utf-8") as url_txt_io:
+        url_lists = url_txt_io.readlines()
+        for url_list in url_lists:
+            url = json.loads(url_list.split("\n")[0].replace("'", '"'))[0]['url']
+            brand_member(url=url)
+
+
 def task_main():
     """
     自动入会主任务
     :return: None
     """
     # 读取店铺ID
-    with open("../../Desktop/shopId.txt", "r", encoding="utf-8") as id_file_io:
-        shop_IDs = id_file_io.readlines()
-        for shop_ID in shop_IDs:
-            brand_member(int(shop_ID))
-
+    try:
+        with open("../../Desktop/shopId.txt", "r", encoding="utf-8") as id_file_io:
+            shop_IDs = id_file_io.readlines()
+            for shop_ID in shop_IDs:
+                brand_member(int(shop_ID))
+    except:
+        pass
 
 def login_by_file():
     """
@@ -183,6 +200,9 @@ if __name__ == '__main__':
     # 登录
     try:
         if login_by_file():
+            # 首先使用 url.txt 快速刷一遍
+            fast_task_main()
+            # 再逐个遍历
             task_main()
     except Exception as e:
         print_log("ERROR", "错误", str(e.args))
