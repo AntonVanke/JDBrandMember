@@ -104,7 +104,8 @@ def brand_member(shop_ID=10000, url=None):
                 # 计算获取的京豆
                 global get_jd
                 get_jd += jd
-                print_log("INFO", "入会成功", "获得" + str(jd) + "京豆")
+                if shop_ID != 10000:
+                    print_log("INFO", "入会成功", "获得" + str(jd) + "京豆")
 
     except Exception as e:
         # print_log("ERROR", "入会失败", str(e.args))
@@ -137,6 +138,7 @@ def task_main():
                 brand_member(int(shop_ID))
     except:
         pass
+
 
 def login_by_file():
     """
@@ -202,6 +204,7 @@ if __name__ == '__main__':
         if login_by_file():
             # 首先使用 url.txt 快速刷一遍
             fast_task_main()
+            print_log("INFO", "获得" + str(get_jd), "快速刷分结束，将进行遍历刷分")
             # 再逐个遍历
             task_main()
     except Exception as e:
