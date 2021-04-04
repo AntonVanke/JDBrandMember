@@ -91,9 +91,10 @@ def brand_member(shop_ID=10000, url=None):
             # re.match(r'(\d+)京豆', gift_info.text, re.M | re.I).group(1)
             jd = int(re.match(r'(\d+)京豆', gift_info.text, re.M | re.I).group(1))
             url_info = [{'url': url, 'gift': jd}]
-            with open("url.txt", "a", encoding="utf-8") as url_txt_io:
-                url_txt_io.write(str(url_info) + "\n")
-                url_txt_io.close()
+            if shop_ID != 10000:
+                with open("url.txt", "a", encoding="utf-8") as url_txt_io:
+                    url_txt_io.write(str(url_info) + "\n")
+                    url_txt_io.close()
             # 入会
             checkbox = browser.find_element_by_xpath('//*[@id="J_brandMember"]/div[2]/div/div[3]/p/span[1]')
             if not checkbox.is_selected():
@@ -104,8 +105,8 @@ def brand_member(shop_ID=10000, url=None):
                 # 计算获取的京豆
                 global get_jd
                 get_jd += jd
-                if shop_ID != 10000:
-                    print_log("INFO", "入会成功", "获得" + str(jd) + "京豆")
+                print_log("INFO", "入会成功", "获得" + str(jd) + "京豆")
+
 
     except Exception as e:
         # print_log("ERROR", "入会失败", str(e.args))
@@ -118,11 +119,14 @@ def fast_task_main():
     :return:
     """
     # 读取 url.txt
-    with open("url.txt", "r", encoding="utf-8") as url_txt_io:
-        url_lists = url_txt_io.readlines()
-        for url_list in url_lists:
-            url = json.loads(url_list.split("\n")[0].replace("'", '"'))[0]['url']
-            brand_member(url=url)
+    try:
+        with open("url.txt", "r", encoding="utf-8") as url_txt_io:
+            url_lists = url_txt_io.readlines()
+            for url_list in url_lists:
+                url = json.loads(url_list.split("\n")[0].replace("'", '"'))[0]['url']
+                brand_member(url=url)
+    except:
+        pass
 
 
 def task_main():
@@ -132,12 +136,12 @@ def task_main():
     """
     # 读取店铺ID
     try:
-        with open("../../Desktop/shopId.txt", "r", encoding="utf-8") as id_file_io:
+        with open("shopId.txt", "r", encoding="utf-8") as id_file_io:
             shop_IDs = id_file_io.readlines()
             for shop_ID in shop_IDs:
                 brand_member(int(shop_ID))
-    except:
-        pass
+    except Exception as e:
+        print_log("ERROR", "遍历错误", str(e.args))
 
 
 def login_by_file():
