@@ -201,7 +201,7 @@ if __name__ == '__main__':
     # 访问京东页面
     browser.get("http://www.jd.com")
     # 计算获得的京豆数
-    get_jd: int = 0
+    get_jd = 0
     print_log("INFO", "开始运行", "--------------------------")
     # 登录
     try:
