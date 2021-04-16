@@ -4,7 +4,7 @@ import re
 import time
 import threading
 from selenium import webdriver
-from msedge.selenium_tools import Edge, EdgeOptions
+# from msedge.selenium_tools import Edge, EdgeOptions
 from selenium.webdriver.firefox.options import Options as FirefoxOptions
 
 from selenium.webdriver.support.wait import WebDriverWait
@@ -60,8 +60,9 @@ def getBrowser(headless: bool = False, browser_type: str = 'Chrome'):
         _browser = webdriver.Chrome(executable_path="drivers/chromedriver", options=chrome_options)
 
     elif browser_type == "Edge":
-        # Fixme: Edge 的无头模式在 Mac 下会报错
-        _browser = Edge(executable_path="drivers/msedgedriver", capabilities={})
+        # Fixme: Edge 的无头模式在 Mac 下会报错, 所以暂时没有
+        # _browser = Edge(executable_path="drivers/msedgedriver", capabilities={})
+        _browser = webdriver.Edge(executable_path="drivers/msedgedriver", capabilities={})
 
     elif browser_type == "Firefox":
         # Firefox
@@ -133,7 +134,7 @@ def setCookie(cookies=None):
 
 def traversals(shop_range):
     # 获取浏览器对象
-    _browser = getBrowser(headless=True, browser_type="Chrome")
+    _browser = getBrowser(headless=True, browser_type=which_browser)
     _browser.get("http://www.jd.com")
     # 设置等待时间
     wait = WebDriverWait(_browser, 3)
@@ -191,26 +192,31 @@ def task(shop_range=None, cookies=None):
     :return:
     """
     setCookie(cookies)
+    # 由于获取了 cookie, 并且执行完了
     browser.close()
-    # 设置进度
+    # 设置进度 TODO
     progress = 100
     try:
         shopID = getShopID()
         ran = int(len(shopID) / THREAD)
         for i in range(THREAD):
-            r = shopID[i * ran: (i+1) * ran]
-            threading.Thread(target=traversals, args=(r, )).start()
+            r = shopID[i * ran: (i + 1) * ran]
+            threading.Thread(target=traversals, args=(r,)).start()
     except Exception as e:
         print(e)
 
 
 if __name__ == '__main__':
-    browser = getBrowser(headless=False, browser_type="Chrome")
-    THREAD = 2
+    # 线程数量：同时在后台运行几个浏览器推荐在4-16个，**如果同时跑的线程过多可能反而效率有所降低**
+    # 如果你的电脑运行后过于卡顿请适当降低线程数量
+    THREAD = 8
+    # 浏览器种类："Chrome"， "Firefox"， "Edge"
+    which_browser = "Chrome"
+
+    browser = getBrowser(headless=False, browser_type=which_browser)
     try:
         browser.get("http://www.jd.com")
         task()
 
     except Exception as e:
         print(e)
-
