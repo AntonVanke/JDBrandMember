@@ -188,6 +188,7 @@ def task(cookies=None):
         def progress():
             while True:
                 time.sleep(1)
+                # FIXME: 在某些终端用 \r 会导致不显示
                 print("当前进度: %f%%   \r" % (shopID_index / shopID_len))
                 sys.stdout.flush()
 
