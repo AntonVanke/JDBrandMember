@@ -133,8 +133,7 @@ dmypy.json
 
 # log
 log.txt
-url.txt
 /drivers/*
 /cookie.json
 main_test.py
-/nshop_ID.txt
+

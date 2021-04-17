@@ -76,10 +76,16 @@ def setCookie(cookies=None):
     # 检测是否需要手动登录
     for _ in range(2):
         try:
-            username = browser.find_element_by_class_name('nickname')
+            username = browser.find_element_by_class_name('nickname').text
             # 保存到 cookie.json
             json.dump(browser.get_cookies(), open("cookie.json", "w", encoding="utf-8"))
-            printLog("INFO", "登录成功", "用户名：" + username.text)
+
+            # 获取当前有多少京豆
+            browser.get("http://bean.jd.com/myJingBean/list")
+            my_beans = int(browser.find_element_by_xpath('//*[@id="main"]/div[3]/div[1]/div[3]').text)
+
+            printLog("INFO", "登录成功", "用户名：" + username + "京豆数：" + str(my_beans))
+
             return
         except:
             if _ == 0:
@@ -100,10 +106,6 @@ def visit(shopID, _browser, url=None):
         _browser.get(url)
         # printLog("DEBUG", "访问店铺链接", url)
         gift_info = _browser.find_element_by_xpath('//*[@id="J_brandMember"]/div[3]/div/ul')
-        # TODO: 临时
-        if shopID != 10000:
-            with open("nshop_ID.txt", "a") as f:
-                f.write(str(shopID) + "\n")
         # 判断入会是否赠送京豆
         if len(re.findall("京豆", gift_info.text)):
             jd = int(re.match(r'(\d+)京豆', gift_info.text, re.M | re.I).group(1))
@@ -178,7 +180,7 @@ def task(cookies=None):
     setCookie(cookies)
     fast_traversals()
     # 由于获取了 cookie, 并且执行完了快速刷分，会开启无头模式快速刷分
-    browser.close()
+    # browser.close()
     try:
         shopID = getShopID()
         # 设置进度 TODO 一些关于进度方面的东西
@@ -208,12 +210,14 @@ def getBrowser(headless: bool = False):
     :return:
     """
     # FIXME：在这设置你的浏览器
+    # 由于我用的是 Mac 的 Chrome ，如果你用的是其它的请你下载对应的驱动并修改下面的驱动路径
+    # #########
     chrome_options = webdriver.ChromeOptions()
     if headless:
         # 无头模式
         chrome_options.add_argument('--headless')
         chrome_options.add_argument('--disable-gpu')
-
+    # #########
     _browser = webdriver.Chrome(executable_path="drivers/chromedriver", options=chrome_options)
     return _browser
 
@@ -221,7 +225,7 @@ def getBrowser(headless: bool = False):
 if __name__ == '__main__':
     # 线程数量：同时在后台运行几个浏览器推荐在4-16个，**如果同时跑的线程过多可能反而效率有所降低**
     # 如果你的电脑运行后过于卡顿请适当降低线程数量
-    THREAD = 10
+    THREAD = 8
     # 一些关于进度方面的东西
     shopID_len = shopID_index = 0
     # 在上面设置你的浏览器
