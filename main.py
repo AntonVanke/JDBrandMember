@@ -104,7 +104,8 @@ def visit(shopID, _browser, url=None):
         if url is None:
             url = "https://mall.jd.com/shopBrandMember-" + str(shopID) + ".html"
         _browser.get(url)
-        # printLog("DEBUG", "访问店铺链接", url)
+        # printLog("DEBUG", "访问店铺链接", url)        # DEBUG: 截屏
+        # _browser.get_screenshot_as_file("./ss.png")
         gift_info = _browser.find_element_by_xpath('//*[@id="J_brandMember"]/div[3]/div/ul')
         # 判断入会是否赠送京豆
         if len(re.findall("京豆", gift_info.text)):
@@ -120,6 +121,7 @@ def visit(shopID, _browser, url=None):
             wait.until(
                 EC.presence_of_element_located(
                     (By.XPATH, '//*[@id="J_brandMember"]/div[2]/div/div[4]'))).click()
+
             # 获取的京豆
             printLog("INFO", "入会成功", "获得" + str(jd) + "京豆")
 
@@ -180,7 +182,7 @@ def task(cookies=None):
     setCookie(cookies)
     fast_traversals()
     # 由于获取了 cookie, 并且执行完了快速刷分，会开启无头模式快速刷分
-    # browser.close()
+    browser.close()
     try:
         shopID = getShopID()
         # 设置进度 TODO 一些关于进度方面的东西
@@ -211,14 +213,34 @@ def getBrowser(headless: bool = False):
     """
     # FIXME：在这设置你的浏览器
     # 由于我用的是 Mac 的 Chrome ，如果你用的是其它的请你下载对应的驱动并修改下面的驱动路径
-    # #########
+
+    # 用其它浏览器可能以下的代码并不合适
     chrome_options = webdriver.ChromeOptions()
     if headless:
         # 无头模式
         chrome_options.add_argument('--headless')
         chrome_options.add_argument('--disable-gpu')
-    # #########
+        chrome_options.add_experimental_option("prefs", {"profile.managed_default_content_settings.images": 2})
     _browser = webdriver.Chrome(executable_path="drivers/chromedriver", options=chrome_options)
+
+    # 这里提供一些其它浏览器的样例代码
+    # # 如果 browser_type == "Edge":
+    #     # Fixme: Edge 的无头模式在 Mac 下会报错
+    #     # 需要`from msedge.selenium_tools import Edge, EdgeOptions`/`pip3 install msedge-selenium-tools`
+    #     _browser = Edge(executable_path="drivers/msedgedriver", capabilities={})
+
+    # # 如果 browser_type == "Firefox":
+    #     # Firefox
+    #     # 需要`from selenium.webdriver.firefox.options import Options as FirefoxOptions`
+    #     firefox_options = FirefoxOptions()
+    #
+    #     if headless:
+    #         # 无头模式
+    #         firefox_options.add_argument('-headless')
+    #         firefox_options.add_argument('--disable-gpu')
+    #
+    #     _browser = webdriver.Firefox(executable_path="drivers/geckodriver", options=firefox_options)
+
     return _browser
 
 
