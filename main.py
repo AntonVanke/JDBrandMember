@@ -28,13 +28,13 @@ def printLog(info_type="", title="", info=""):
     else:
         print(log)
         return
-    with open("log.txt", "a", encoding="utf-8") as log_a_file_io:
+    with open(os.path.join(os.path.split(sys.argv[0])[0], "log.txt"), "a", encoding="utf-8") as log_a_file_io:
         log_a_file_io.write(log + "\n")
 
 
 def getShopID():
     try:
-        with open("shopId.txt", "r", encoding="utf-8") as id_file_io:
+        with open(os.path.join(os.path.split(sys.argv[0])[0], "shopId.txt"), "r", encoding="utf-8") as id_file_io:
             return id_file_io.readlines()
     except Exception as _e:
         printLog("ERROR", "获取店铺失败", str(_e.args))
@@ -47,8 +47,8 @@ def setCookie(cookies=None):
     :return:
     """
     if cookies is None:
-        if os.path.exists("cookie.json"):
-            with open("cookie.json", "r", encoding="utf-8") as cookies_file:
+        if os.path.exists(os.path.join(os.path.split(sys.argv[0])[0], "cookie.json")):
+            with open(os.path.join(os.path.split(sys.argv[0])[0], "cookie.json"), "r", encoding="utf-8") as cookies_file:
                 cookies = json.loads(cookies_file.read())
 
                 # 首先删除浏览器缓存 Cookie
@@ -112,7 +112,7 @@ def visit(shopID, _browser, url=None):
             jd = int(re.match(r'(\d+)京豆', gift_info.text, re.M | re.I).group(1))
             url_info = [{'url': url, 'gift': jd}]
             if shopID != 10000:
-                with open("url.txt", "a", encoding="utf-8") as url_txt_io:
+                with open(os.path.join(os.path.split(sys.argv[0])[0], "url.txt"), "a", encoding="utf-8") as url_txt_io:
                     url_txt_io.write(str(url_info) + "\n")
                     url_txt_io.close()
             # 入会
@@ -138,7 +138,7 @@ def fast_traversals():
     """
     # 读取 url.txt
     try:
-        with open("url.txt", "r", encoding="utf-8") as url_txt_io:
+        with open(os.path.join(os.path.split(sys.argv[0])[0], "url.txt"), "r", encoding="utf-8") as url_txt_io:
             url_lists = url_txt_io.readlines()
             for url_list in url_lists:
                 url = json.loads(url_list.split("\n")[0].replace("'", '"'))[0]['url']
@@ -155,7 +155,7 @@ def traversals(shop_list: list):
     _browser.get("http://www.jd.com")
 
     # 设置浏览器 cookie
-    with open("cookie.json", "r", encoding="utf-8") as ck:
+    with open(os.path.join(os.path.split(sys.argv[0])[0], "cookie.json"), "r", encoding="utf-8") as ck:
         cookies = json.loads(ck.read())
 
         # 首先删除浏览器缓存 Cookie
@@ -221,7 +221,7 @@ def getBrowser(headless: bool = False):
         chrome_options.add_argument('--headless')
         chrome_options.add_argument('--disable-gpu')
         chrome_options.add_experimental_option("prefs", {"profile.managed_default_content_settings.images": 2})
-    _browser = webdriver.Chrome(executable_path="drivers/chromedriver", options=chrome_options)
+    _browser = webdriver.Chrome(executable_path=os.path.join(os.path.split(sys.argv[0])[0], "drivers/chromedriver"), options=chrome_options)
 
     # 这里提供一些其它浏览器的样例代码
     # # 如果 browser_type == "Edge":
