@@ -104,8 +104,6 @@ def visit(shopID, _browser, url=None):
         if url is None:
             url = "https://mall.jd.com/shopBrandMember-" + str(shopID) + ".html"
         _browser.get(url)
-        # printLog("DEBUG", "访问店铺链接", url)        # DEBUG: 截屏
-        # _browser.get_screenshot_as_file("./ss.png")
         gift_info = _browser.find_element_by_xpath('//*[@id="J_brandMember"]/div[3]/div/ul')
         # 判断入会是否赠送京豆
         if len(re.findall("京豆", gift_info.text)):
@@ -220,7 +218,10 @@ def getBrowser(headless: bool = False):
         # 无头模式
         chrome_options.add_argument('--headless')
         chrome_options.add_argument('--disable-gpu')
+        chrome_options.add_argument('--no-sandbox')
+        chrome_options.add_argument('--disable-dev-shm-usage')
         chrome_options.add_experimental_option("prefs", {"profile.managed_default_content_settings.images": 2})
+        chrome_options.add_experimental_option("excludeSwitches", ['enable-automation','enable-logging'])
     _browser = webdriver.Chrome(executable_path=os.path.join(os.path.split(sys.argv[0])[0], "drivers/chromedriver"), options=chrome_options)
 
     # 这里提供一些其它浏览器的样例代码
@@ -247,7 +248,7 @@ def getBrowser(headless: bool = False):
 if __name__ == '__main__':
     # 线程数量：同时在后台运行几个浏览器推荐在4-16个，**如果同时跑的线程过多可能反而效率有所降低**
     # 如果你的电脑运行后过于卡顿请适当降低线程数量
-    THREAD = 8
+    THREAD = 4
     # 一些关于进度方面的东西
     shopID_len = shopID_index = 0
     # 在上面设置你的浏览器
