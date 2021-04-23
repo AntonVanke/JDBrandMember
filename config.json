@@ -3,6 +3,6 @@
     "browserType": "Chrome",
     "headless": true,
     "binary": "",
-    "useUser": 1,
+    "useUser": 0,
     "users": []
 }
