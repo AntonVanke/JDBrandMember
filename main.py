@@ -26,10 +26,10 @@ def print_log(info_type="", title="", info=""):
     now = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
     log = now + "  " + info_type + "  " + title + "  " + info
     # 暂时屏蔽了输出
-    # if info_type == "ERROR":
-    #     print("\n\033[0;31m" + log + "\033[0m\n")
-    # elif info_type == "INFO":
-    #     print("\n" + log)
+    if info_type == "ERROR":
+        print("\n\033[0;31m" + log + "\033[0m\n")
+    elif info_type == "INFO":
+        print("\n" + log)
     with open(get_file("./logs/jdbm.log"), "a", encoding="utf-8") as log_a_file_io:
         log_a_file_io.write(log + "\n")
 
@@ -205,6 +205,8 @@ def traversals(start: int, end: int, step: int = 1):
         print_log("ERROR", "登录失败", "请使用‘add_cookie.py’添加cookie")
     except ValueError:
         print_log("ERROR", "可能是shopid损坏", "请到github上下载最新的")
+    except IndexError:
+        print_log("ERROR", "请先登录", "请使用add_cookie.py登录")
 
 
 def main():
