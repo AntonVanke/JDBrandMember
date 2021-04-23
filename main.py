@@ -1,10 +1,12 @@
 import json
 import os
-import re
 import sys
-import time
+
 import threading
+import time
+
 from selenium import webdriver
+from selenium.common.exceptions import WebDriverException
 
 from selenium.webdriver.support.wait import WebDriverWait
 
@@ -12,250 +14,254 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 
 
-def printLog(info_type="", title="", info=""):
+def print_log(info_type="", title="", info=""):
     """
     :param info_type: 日志的等级
     :param title: 日志的标题
     :param info: 日志的信息
     :return:
     """
+    if not os.path.exists(get_file("./logs")):
+        os.mkdir(get_file("./logs/"))
     now = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
     log = now + "  " + info_type + "  " + title + "  " + info
-    if info_type == "ERROR":
-        print("\033[0;31m" + log + "\033[0m\n")
-    elif info_type == "INFO":
-        print(log)
-    else:
-        print(log)
-        return
-    with open(os.path.join(os.path.split(sys.argv[0])[0], "log.txt"), "a", encoding="utf-8") as log_a_file_io:
+    # 暂时屏蔽了输出
+    # if info_type == "ERROR":
+    #     print("\n\033[0;31m" + log + "\033[0m\n")
+    # elif info_type == "INFO":
+    #     print("\n" + log)
+    with open(get_file("./logs/jdbm.log"), "a", encoding="utf-8") as log_a_file_io:
         log_a_file_io.write(log + "\n")
 
 
-def getShopID():
-    try:
-        with open(os.path.join(os.path.split(sys.argv[0])[0], "shopId.txt"), "r", encoding="utf-8") as id_file_io:
-            return id_file_io.readlines()
-    except Exception as _e:
-        printLog("ERROR", "获取店铺失败", str(_e.args))
-
-
-def setCookie(cookies=None):
+def get_file(file_name=""):
     """
-    设置 cookie
-    :param cookies: cookie列表
+    获取文件绝对路径, 防止在某些情况下报错
+    :param file_name: 文件名
     :return:
     """
-    if cookies is None:
-        if os.path.exists(os.path.join(os.path.split(sys.argv[0])[0], "cookie.json")):
-            with open(os.path.join(os.path.split(sys.argv[0])[0], "cookie.json"), "r", encoding="utf-8") as cookies_file:
-                cookies = json.loads(cookies_file.read())
-
-                # 首先删除浏览器缓存 Cookie
-                browser.delete_all_cookies()
-                # 先写入新的 Cookie
-                for cookie in cookies:
-                    browser.add_cookie(cookie)
-
-                # 刷新页面
-                browser.refresh()
-                cookies_file.close()
-        else:
-            # 如果没有 cookie 只能自己登录了
-            pass
-    else:
-        # 首先删除浏览器缓存 Cookie
-        browser.delete_all_cookies()
-        # 先写入新的 Cookie
-        for cookie in cookies:
-            browser.add_cookie(cookie)
-
-        # 刷新页面
-        browser.refresh()
-
-    # 检测是否需要手动登录
-    for _ in range(2):
-        try:
-            username = browser.find_element_by_class_name('nickname').text
-            # 保存到 cookie.json
-            json.dump(browser.get_cookies(), open("cookie.json", "w", encoding="utf-8"))
-
-            # 获取当前有多少京豆
-            browser.get("http://bean.jd.com/myJingBean/list")
-            my_beans = int(browser.find_element_by_xpath('//*[@id="main"]/div[3]/div[1]/div[3]').text)
-
-            printLog("INFO", "登录成功", "用户名：" + username + "京豆数：" + str(my_beans))
-
-            return
-        except:
-            if _ == 0:
-                browser.get("https://passport.jd.com/new/login.aspx")
-                printLog("INFO", "未登录", "请在15s内扫码登录")
-                time.sleep(20)
-
-    printLog("ERROR", "未登录", "请检查你的账号")
-    raise Exception("未登录账号")
+    return os.path.join(os.path.split(sys.argv[0])[0], file_name)
 
 
-def visit(shopID, _browser, url=None):
+def get_config():
+    """
+    获取配置
+    :return:
+    """
+    return json.load(open(get_file("config.json")))
+
+
+def get_browser(_config):
+    """
+    获取浏览器对象
+    :return:
+    """
+    browser_type = _config['browserType']
+    headless = _config['headless']
+    binary = _config['binary']
+
     try:
-        # 设置等待时间
-        wait = WebDriverWait(_browser, 3)
-        if url is None:
-            url = "https://mall.jd.com/shopBrandMember-" + str(shopID) + ".html"
-        _browser.get(url)
+        if browser_type == 'Chrome':
+            chrome_options = webdriver.ChromeOptions()
+            # 防止在某些情况下报错`
+            chrome_options.add_argument('--no-sandbox')
+            chrome_options.add_argument('--disable-dev-shm-usage')
+            chrome_options.add_experimental_option("excludeSwitches", ['enable-automation', 'enable-logging'])
+            if binary != "":
+                # 当找不到浏览器时需要在 config 里配置路径
+                chrome_options.binary_location = binary
+            if headless:
+                chrome_options.add_argument('--headless')
+                chrome_options.add_argument('--disable-gpu')
+            if sys.platform == 'linux':
+                _browser = webdriver.Chrome(executable_path=get_file("./drivers/chromedriver"), desired_capabilities={},
+                                            options=chrome_options)
+            elif sys.platform == 'darwin':
+                _browser = webdriver.Chrome(executable_path=get_file("./drivers/chromedriver"), desired_capabilities={},
+                                            options=chrome_options)
+            elif sys.platform == 'win32':
+                _browser = webdriver.Chrome(executable_path=get_file("./drivers/chromedriver"), desired_capabilities={},
+                                            options=chrome_options)
+
+        elif browser_type == 'Edge':
+            from msedge.selenium_tools import Edge, EdgeOptions
+            edge_options = EdgeOptions()
+            edge_options.use_chromium = True
+            edge_options.add_argument('--no-sandbox')
+            edge_options.add_argument('--disable-dev-shm-usage')
+            edge_options.add_experimental_option("excludeSwitches", ['enable-automation', 'enable-logging'])
+            if binary != "":
+                edge_options.binary_location = binary
+            if headless:
+                edge_options.add_argument('--headless')
+                edge_options.add_argument('--disable-gpu')
+            if sys.platform == 'linux':
+                _browser = Edge(executable_path=get_file("./drivers/msedgedriver"), options=edge_options,
+                                capabilities={})
+            elif sys.platform == 'darwin':
+                _browser = Edge(executable_path=get_file("./drivers/msedgedriver"), capabilities={},
+                                options=edge_options)
+            elif sys.platform == 'win32':
+                _browser = Edge(executable_path=get_file("./drivers/msedgedriver"), capabilities={},
+                                options=edge_options)
+
+        elif browser_type == 'Firefox':
+            # 先清除上次的日志
+            if not os.path.exists(get_file("./logs")):
+                os.mkdir(get_file("./logs/"))
+            open(get_file("./logs/geckodriver.log"), "w").close()
+
+            firefox_options = webdriver.FirefoxOptions()
+            firefox_options.log.level = "fatal"
+            if binary != "":
+                firefox_options.binary_location = binary
+            if headless:
+                firefox_options.add_argument('--headless')
+                firefox_options.add_argument('--disable-gpu')
+            if sys.platform == 'linux':
+                _browser = webdriver.Firefox(executable_path=get_file('./drivers/geckodriver'), options=firefox_options,
+                                             service_log_path=get_file("./logs/geckodriver.log"))
+            elif sys.platform == 'darwin':
+                _browser = webdriver.Firefox(executable_path=get_file('./drivers/geckodriver'), options=firefox_options)
+            elif sys.platform == 'win32':
+                _browser = webdriver.Firefox(executable_path=get_file('./drivers/geckodriver'), options=firefox_options)
+        else:
+            raise WebDriverException
+        return _browser
+    except WebDriverException:
+        # 驱动问题
+        print_log("ERROR", "浏览器错误", "请检查你的驱动和配置")
+
+
+def visit(shopid, _browser, _wait):
+    """
+    :param shopid: 店铺编号
+    :param _browser: 浏览器对象
+    :param _wait: 等待
+    :return:
+    """
+    # 访问页面
+    _browser.get("https://mall.jd.com/shopBrandMember-" + str(shopid) + ".html")
+    try:
         gift_info = _browser.find_element_by_xpath('//*[@id="J_brandMember"]/div[3]/div/ul')
-        # 判断入会是否赠送京豆
-        if len(re.findall("京豆", gift_info.text)):
-            jd = int(re.match(r'(\d+)京豆', gift_info.text, re.M | re.I).group(1))
-            url_info = [{'url': url, 'gift': jd}]
-            if shopID != 10000:
-                with open(os.path.join(os.path.split(sys.argv[0])[0], "url.txt"), "a", encoding="utf-8") as url_txt_io:
-                    url_txt_io.write(str(url_info) + "\n")
-                    url_txt_io.close()
+        # 替换掉正则表达式
+        if "豆" in list(gift_info.text):
+            jd = ""
+            for gift in gift_info.text.split("\n"):
+                if "豆" in gift:
+                    jd = gift.replace("京豆", "")
             # 入会
             _browser.find_element_by_xpath('//*[@id="J_brandMember"]/div[2]/div/div[3]/p/span[1]').click()
             # 通过class找到按钮并点击成为会员
-            wait.until(
+            _wait.until(
                 EC.presence_of_element_located(
                     (By.XPATH, '//*[@id="J_brandMember"]/div[2]/div/div[4]'))).click()
-
+            # 添加到最后
+            global shopID
+            shopID.append("\n" + str(shopid))
             # 获取的京豆
-            printLog("INFO", "入会成功", "获得" + str(jd) + "京豆")
+            global get_jd
+            get_jd += int(jd)
+            print_log("INFO", str(shopid) + "入会成功", "获得" + str(jd) + "京豆")
+            # 写入
+            with open(get_file("shopid.txt"), "w") as f:
+                # 去重 fixme: 去重好像没有啊????
+                _newid = list(dict.fromkeys(shopID[::-1]))[::-1]
+                for _ in _newid:
+                    if _ != "\n":
+                        f.write(_)
 
-
-    except Exception as e:
-        # printLog("ERROR", "入会失败", str(e.args))
+    except WebDriverException:
+        pass
+    except AttributeError:
+        # fixme:
         pass
 
 
-def fast_traversals():
+def traversals(start: int, end: int, step: int = 1):
     """
-    利用之前遍历过的`url.txt`快速获取京豆
+    遍历
+    :param start: 开始的位置
+    :param end: 结束的位置
+    :param step: step
     :return:
     """
-    # 读取 url.txt
     try:
-        with open(os.path.join(os.path.split(sys.argv[0])[0], "url.txt"), "r", encoding="utf-8") as url_txt_io:
-            url_lists = url_txt_io.readlines()
-            for url_list in url_lists:
-                url = json.loads(url_list.split("\n")[0].replace("'", '"'))[0]['url']
-                visit(shopID=10000, _browser=browser, url=url)
-    except:
-        printLog("ERROR", "错误", "快速遍历问题")
-        pass
+        browser = get_browser(config)
+        wait = WebDriverWait(browser, 3)
+        browser.get("https://www.jd.com/")
+
+        # 写入 cookie
+        for cookie in config['users'][config['useUser']]['cookie']:
+            browser.add_cookie(cookie)
+        browser.refresh()
+        # 验证是否登录成功
+        wait.until(EC.presence_of_element_located((By.CLASS_NAME, 'nickname')))
+        # 开始遍历
+        for _id in shopID[start:end:step]:
+            visit(int(_id), _browser=browser, _wait=wait)
+            add_completed()
+    except WebDriverException:
+        print_log("ERROR", "登录失败", "请使用‘add_cookie.py’添加cookie")
+    except ValueError:
+        print_log("ERROR", "可能是shopid损坏", "请到github上下载最新的")
 
 
-def traversals(shop_list: list):
-    global shopID_index
-    # 获取浏览器对象
-    _browser = getBrowser(headless=True)
-    _browser.get("http://www.jd.com")
-
-    # 设置浏览器 cookie
-    with open(os.path.join(os.path.split(sys.argv[0])[0], "cookie.json"), "r", encoding="utf-8") as ck:
-        cookies = json.loads(ck.read())
-
-        # 首先删除浏览器缓存 Cookie
-        _browser.delete_all_cookies()
-        # 先写入新的 Cookie
-        for cookie in cookies:
-            _browser.add_cookie(cookie)
-
-        # 刷新页面
-        _browser.refresh()
-        ck.close()
-    # 遍历
-    for shopID in shop_list:
-        visit(int(shopID), _browser=_browser)
-        shopID_index += 1
-
-
-def task(cookies=None):
+def main():
     """
-    任务进程函数
-    :param cookies: cookies 如果没有的话需要使用`cookie.json`登录
     :return:
     """
-    setCookie(cookies)
-    fast_traversals()
-    # 由于获取了 cookie, 并且执行完了快速刷分，会开启无头模式快速刷分
-    browser.close()
-    try:
-        shopID = getShopID()
-        # 设置进度 TODO 一些关于进度方面的东西
-        global shopID_len
-        shopID_len = len(shopID)
+    for i in range(THREAD):
+        if i == THREAD - 1:
+            # t(start=-1, end=-THREAD_LEN)
+            threading.Thread(target=traversals, args=(-1, -THREAD_LEN, -1,)).start()
+        else:
+            # 优先执行上次送豆的
+            # t(start=i * THREAD_LEN, end=(i + 1) * THREAD_LEN)
+            threading.Thread(target=traversals, args=(i * THREAD_LEN, (i + 1) * THREAD_LEN, 1,)).start()
 
-        def progress():
-            while True:
-                time.sleep(1)
-                # FIXME: 在某些终端用 \r 会导致不显示
-                print("当前进度: %f%%   \r" % (shopID_index / shopID_len))
-                sys.stdout.flush()
-
-        threading.Thread(target=progress).start()
-        ran = int(len(shopID) / THREAD)
-        for i in range(THREAD):
-            r = shopID[i * ran: (i + 1) * ran]
-            threading.Thread(target=traversals, args=(r,)).start()
-    except Exception as e:
-        print(e)
+    # 所有结束时才会结束
+    while threading.active_count() != 1:
+        time.sleep(3)
+        print_process()
 
 
-def getBrowser(headless: bool = False):
+def add_completed():
     """
-    获取 browser 对象
-    :param headless: 是否开启无头模式
+    增加进度
     :return:
     """
-    # FIXME：在这设置你的浏览器
-    # 由于我用的是 Mac 的 Chrome ，如果你用的是其它的请你下载对应的驱动并修改下面的驱动路径
+    global completed
+    completed += 1
 
-    # 用其它浏览器可能以下的代码并不合适
-    chrome_options = webdriver.ChromeOptions()
-    if headless:
-        # 无头模式
-        chrome_options.add_argument('--headless')
-        chrome_options.add_argument('--disable-gpu')
-        chrome_options.add_argument('--no-sandbox')
-        chrome_options.add_argument('--disable-dev-shm-usage')
-        chrome_options.add_experimental_option("prefs", {"profile.managed_default_content_settings.images": 2})
-        chrome_options.add_experimental_option("excludeSwitches", ['enable-automation','enable-logging'])
-    _browser = webdriver.Chrome(executable_path=os.path.join(os.path.split(sys.argv[0])[0], "drivers/chromedriver"), options=chrome_options)
 
-    # 这里提供一些其它浏览器的样例代码
-    # # 如果 browser_type == "Edge":
-    #     # Fixme: Edge 的无头模式在 Mac 下会报错
-    #     # 需要`from msedge.selenium_tools import Edge, EdgeOptions`/`pip3 install msedge-selenium-tools`
-    #     _browser = Edge(executable_path="drivers/msedgedriver", capabilities={})
-
-    # # 如果 browser_type == "Firefox":
-    #     # Firefox
-    #     # 需要`from selenium.webdriver.firefox.options import Options as FirefoxOptions`
-    #     firefox_options = FirefoxOptions()
-    #
-    #     if headless:
-    #         # 无头模式
-    #         firefox_options.add_argument('-headless')
-    #         firefox_options.add_argument('--disable-gpu')
-    #
-    #     _browser = webdriver.Firefox(executable_path="drivers/geckodriver", options=firefox_options)
-
-    return _browser
+def print_process():
+    """
+    打印进度
+    :return:
+    """
+    # print("\r {:.5f}%".format(completed / ID_LEN), end="")
+    print("\r正在执行：{:^5.5f}%[{}->{}]此次运行获得{}京豆".format((completed / ID_LEN), "=" * int(70 * (completed / ID_LEN)),
+                                            "*" * (70 - int(70 * (completed / ID_LEN))), get_jd), end="")
 
 
 if __name__ == '__main__':
-    # 线程数量：同时在后台运行几个浏览器推荐在4-16个，**如果同时跑的线程过多可能反而效率有所降低**
-    # 如果你的电脑运行后过于卡顿请适当降低线程数量
-    THREAD = 4
-    # 一些关于进度方面的东西
-    shopID_len = shopID_index = 0
-    # 在上面设置你的浏览器
-    browser = getBrowser(headless=False)
     try:
-        browser.get("http://www.jd.com")
-        task()
-
+        config = get_config()
+        # 线程数
+        THREAD = config['thread']
+        shopID = open(get_file("shopid.txt"), "r").readlines()
+        # 店铺数
+        ID_LEN = len(shopID)
+        completed = 0
+        # 每个线程的店铺数
+        THREAD_LEN = int(ID_LEN / THREAD)
+        # 获得京豆数
+        get_jd = 0
+        # main
+        main()
     except Exception as e:
-        print(e)
+        print_log("ERROR", "运行错误", str(e.args))
+        print("")
+    finally:
+        print("运行结束")

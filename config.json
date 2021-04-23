@@ -1,0 +1,8 @@
+{
+    "thread": 6,
+    "browserType": "Chrome",
+    "headless": true,
+    "binary": "",
+    "useUser": 1,
+    "users": []
+}

@@ -131,9 +131,5 @@ dmypy.json
 # idea
 .idea/
 
-# log
-log.txt
-/drivers/*
-/cookie.json
-main_test.py
+/drivers/chromedriver
 

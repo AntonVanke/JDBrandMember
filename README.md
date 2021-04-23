@@ -1,92 +1,57 @@
-## 京东入会领京豆
+### 京东入会领京豆
 
-1. ### 要求
+#### 要求
 
-   1. `Python 3.7+`
-   2. 需要 `Chrome`、`Edge(Chromium)`、`FireFox` 等支持`Selenium`的浏览器
-   3. 系统支持`Mac`、`Linux`、`Windows`支持`webdriver`的版本
+1.  有一定的电脑知识 or 有耐心爱折腾
+2.  需要`Chrome(推荐)`、`Edge(Chromium)`、`Firefox`
+3.  操作系统需是`Mac(本人没在m1上测试)`、`Linux(在deepin上测试过)`、`Windows`
 
-2. ### 安装方式
+#### 安装方法
 
-   脚本采用`Python Selenium`爬取京东入会有礼页面，由于遍历了超过50万个页面，所以运行的时间会比较长，建议挂在服务器上运行
+脚本采用`Selenium`遍历京东入会有礼界面，由于遍历了`20000+`个店铺，可能所需要的时间比较长(视电脑情况30min-5h)
 
-   1. 克隆到本地
-      ```shell
-      git clone https://github.com/AntonVanke/JDBrandMember.git
-      ```
+1.  克隆到本地
 
-   2. 安装所需的包
+    ```shell
+    git clone https://github.com/AntonVanke/JDBrandMember.git
+    ```
 
-      ```shell
-      pip3 install -r requirements.txt
-      ```
+2.  安装所需要的包
 
-   3. 下载相应的浏览器驱动
+    ```shell
+    pip3 install -r requirements.txt
+    ```
 
-      - Chrome
-        - 首先访问`chrome://version/`查看浏览器的版本
-        - 去访问<http://chromedriver.storage.googleapis.com/index.html>下载对应的`webdriver`放到`drivers`下
-      - Edge
-        - 访问`edge://version/`查看浏览器的版本
-        - <https://developer.microsoft.com/en-us/microsoft-edge/tools/webdriver/>下载对应的`webdriver`放到`drivers`下
-      - Firefox
-        - 访问`about:version`查看浏览器的版本
-        - <https://github.com/mozilla/geckodriver/releases/>下载对应的`webdriver`放到`drivers`下
+3.  下载对应的浏览器驱动放到项目的`drivers`文件夹下面
 
-   4. 运行
+    1.  `chrome`请访问`chrome://version/`查看浏览器的版本，然后去[ChromeDriver Mirror (taobao.org)](https://npm.taobao.org/mirrors/chromedriver/)下载对应的版本/系统驱动
+    2.  `edge`请访问`edge://version/`查看浏览器的版本，[Microsoft Edge - Webdriver (windows.net)](https://msedgewebdriverstorage.z22.web.core.windows.net/)下载
+    3.  `Firefox`请访问[Releases · mozilla/geckodriver (github.com)](https://github.com/mozilla/geckodriver/releases/)下载
 
-       1. 在本目录下打开终端运行`python main.py`
+4.  配置`config.json`
 
-           >   第一次打开时会生成几个文件，都是可以删除的。第一次登录会提示你扫码登录，以后的登录都可以通过`cookie.json`登录，所以请妥善保管你的`cookies`
+    ```json
+    {
+        "thread": 6,  # 线程数， 推荐4-8线程
+        "browserType": "Chrome",  # Chrome/Edge/Firefox
+        "headless": true,  # 无头模式 请保持开启否则多线程情况下窗口比较多
+        "binary": "",  # 可执行路径，如果驱动没有找到浏览器的话需要你手动配置
+        "useUser": 0,  # 用户下标，默认是0(users[0]第一个用户)
+        "users": []  # 用户列表可以通过 add_cookie.py 添加
+    }
+    ```
 
-3. ### 一些问题
+5.  添加`cookie`
 
-    -   为什么我的积分没有增加呢？
+    请在项目目录下执行`python3 add_cookie.py`， 在打开的浏览器界面登录你的京东，此时你可以看到`config.json`已经有了你的用户信息（**请不要随意泄露你的cookie**）
 
-        >   由于京东的店铺比较多，程序是通过遍历所有店铺，选择赠送京豆的店铺加入，所以进程会很缓慢。
-        >
-        >   在你以前没有用过同类软件的情况下是可以在 1 ~~10~~ 个小时获得大约 2000 京豆的（具体以各个店铺活动为准），
-        >
-        >   如果你以前用过此类软件，可能京豆**回报率会很低**
+6.  执行主程序
 
-    -   为什么我运行报错了？
+    在项目目录下执行`python3 main.py`，等待执行完毕即可，你可以访问项目下的`logs/jdbm.log`查看你的日志
 
-        >   可能有以下原因
-        >
-        >   1.  没有下载驱动放到`drivers`文件夹里，驱动的版本不对
-        >
-        >       >   请查看文档的第 2 部分安装相应的驱动
-        >
-        >   2.  你的浏览器版本过低
-        >
-        >       >   过低的浏览器版本可能并不支持`selenium 3`或者`headless`模式请你升级到最新版本，并使用对应版本的驱动
-        >
-        >   3.  程序设计的问题
-        >
-        >       >   很抱歉，由于我是匆忙的写完这个爬虫，可能有很多的不足之处，欢迎提交`issues`和`pull requests`
-        >          
-        >   4.  关于 `url.txt`
-        >
-        >       >   你可以分享你的`url.txt`以帮助别人快速刷分，其中不包含你的个人信息，此文件可能会随时更新
+####  LICENSE
 
-    -   运行后生成了几个文件，都是什么？
-
-        >   -   url.txt: 是遍历的具有入会送豆的页面 `url`
-        >   -   cookie.json: 是你登录京东的`Cookie`**请不要泄露給其他人**
-        >   -   log.txt: 日志文件
-
-
-
-4. ### 使用截图
-
-   ![截屏2021-03-08 下午8.20.18](https://github.com/AntonVanke/JDBrandMember/blob/main/readme.img/readme1.png?raw=true)
-   
-
-   ![截屏2021-03-08 下午8.20.18](https://github.com/AntonVanke/JDBrandMember/blob/main/readme.img/readme2.jpg?raw=true)
-   
-5. ### LICENSE
-
-
+>  
 >   MIT License
 >   
 >   Copyright (c) 2021 Vanke Anton
@@ -108,3 +73,4 @@
 >   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 >   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 >   SOFTWARE.
+>   
