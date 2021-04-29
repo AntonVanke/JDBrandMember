@@ -4,6 +4,7 @@ import sys
 
 import threading
 import time
+import traceback
 
 from selenium import webdriver
 from selenium.common.exceptions import WebDriverException
@@ -158,17 +159,18 @@ def visit(shopid, _browser, _wait):
                     (By.XPATH, '//*[@id="J_brandMember"]/div[2]/div/div[4]'))).click()
             # 添加到最后
             global shopID
-            shopID.append("\n" + str(shopid))
+            shopID.append(str(shopid) + '\n')
             # 获取的京豆
             global get_jd
             get_jd += int(jd)
             print_log("INFO", str(shopid) + "入会成功", "获得" + str(jd) + "京豆")
             # 写入
             with open(get_file("shopid.txt"), "w") as f:
-                # 去重 fixme: 去重好像没有啊????
-                _newid = list(dict.fromkeys(shopID[::-1]))[::-1]
-                for _ in _newid:
-                    if _ != "\n":
+                newid = list(dict.fromkeys(shopID[::-1]))[::-1]
+                for _ in newid:
+                    if newid[-1] == _:
+                        f.write(_[0:-1])
+                    else:
                         f.write(_)
 
     except WebDriverException:
@@ -188,13 +190,14 @@ def traversals(start: int, end: int, step: int = 1):
     """
     try:
         browser = get_browser(config)
-        wait = WebDriverWait(browser, 3)
+        wait = WebDriverWait(browser, 8)
         browser.get("https://www.jd.com/")
         # 写入 cookie
         for cookie in config['users'][config['useUser']]['cookie']:
             # 在某些网络环境下可能会登录异常
             cookie['domain'] = ".jd.com"
             browser.add_cookie(cookie)
+        browser.get("https://home.jd.com/")
         browser.refresh()
         # 验证是否登录成功
         wait.until(EC.presence_of_element_located((By.CLASS_NAME, 'nickname')))
@@ -203,6 +206,7 @@ def traversals(start: int, end: int, step: int = 1):
             visit(int(_id), _browser=browser, _wait=wait)
             add_completed()
     except WebDriverException:
+        traceback.print_exc()
         print_log("ERROR", "登录失败", "请使用‘add_cookie.py’添加cookie")
     except ValueError:
         print_log("ERROR", "可能是shopid损坏", "请到github上下载最新的")
@@ -252,8 +256,8 @@ def print_process():
     :return:
     """
     # print("\r {:.5f}%".format(completed / ID_LEN), end="")
-    print("\r正在执行：{:^5.5f}%[{}->{}]此次运行获得{}京豆".format((completed / ID_LEN), "=" * int(70 * (completed / ID_LEN)),
-                                            "*" * (70 - int(70 * (completed / ID_LEN))), get_jd), end="")
+    print("\r正在执行：{:^5.3f}%[{}->{}]此次运行获得{}京豆".format((completed / ID_LEN) * 100, "=" * int(50 * (completed / ID_LEN)),
+                                            "*" * (50 - int(50 * (completed / ID_LEN))), get_jd), end="")
 
 
 if __name__ == '__main__':
@@ -263,6 +267,11 @@ if __name__ == '__main__':
         THREAD = config['thread']
         # 店铺数
         shopID = open(get_file("shopid.txt"), "r").readlines()
+
+        # 修复了去重的问题
+        if shopID[-1][-1] != "\n":
+            shopID[-1] = shopID[-1] + "\n"
+
         ID_LEN = len(shopID)
         completed = 0
         # 每个线程的店铺数
