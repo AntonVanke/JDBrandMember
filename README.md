@@ -4,7 +4,7 @@
 
 1.  有一定的电脑知识 or 有耐心爱折腾
 2.  需要`Chrome(推荐)`、`Edge(Chromium)`、`Firefox`
-3.  操作系统需是`Mac(本人没在m1上测试)`、`Linux(在deepin上测试过)`、`Windows`
+3.  操作系统需是 Mac([@zc-nju-med](https://github.com/AntonVanke/JDBrandMember/issues/18#issuecomment-830028426)在m1上测试正常)、Linux(在deepin上测试过)、Windows
 
 #### 安装方法
 
@@ -25,7 +25,11 @@
 3.  下载对应的浏览器驱动放到项目的`drivers`文件夹下面
 
     1.  `chrome`请访问`chrome://version/`查看浏览器的版本，然后去[ChromeDriver Mirror (taobao.org)](https://npm.taobao.org/mirrors/chromedriver/)下载对应的版本/系统驱动
+
+        >   例如 <https://npm.taobao.org/mirrors/chromedriver/90.0.4430.24/>
+
     2.  `edge`请访问`edge://version/`查看浏览器的版本，[Microsoft Edge - Webdriver (windows.net)](https://msedgewebdriverstorage.z22.web.core.windows.net/)下载
+
     3.  `Firefox`请访问[Releases · mozilla/geckodriver (github.com)](https://github.com/mozilla/geckodriver/releases/)下载
 
 4.  配置`config.json`
