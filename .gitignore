@@ -133,3 +133,4 @@ dmypy.json
 
 /drivers/
 .DS_Store
+config.json

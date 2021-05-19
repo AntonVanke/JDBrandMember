@@ -360,24 +360,24 @@ if __name__ == '__main__':
         sys.exit()
 
     # 线程数
-    thread: int = config.get("thread", 6)
+    thread = config.get("thread", 6)
     # Chrome 可执行路径
-    binary: str = config.get("binary", "")
+    binary = config.get("binary", "")
     # 刷豆时是否开启 headless
-    headless: bool = config.get("headless", True)
+    headless = config.get("headless", True)
     # 默认用户: 0 表示所有用户, 其它代表第几个
-    use_user: int = config.get("useUser", 0)
+    use_user = config.get("useUser", 0)
     # 阈值: 小于等于此阈值的不会入会
-    threshold: int = config.get("threshold", 0)
+    threshold = config.get("threshold", 0)
     # 是否获得红包？: 因为红包的有效期只有十天，所以暂时不想买的不要开启
-    is_get_voucher: bool = config.get("isGetVoucher", False)
+    is_get_voucher = config.get("isGetVoucher", True)
     # 用户 cookie 列表
-    users: list = config.get("users", [])
+    users = config.get("users", [])
     if use_user > len(users):
         use_user = 0
 
     # 店铺数
-    shopID: list = open(get_file_path("shopid.txt"), "r").readlines()
+    shopID = open(get_file_path("shopid.txt"), "r").readlines()
     shopID_len = len(shopID)
     thread_len = int(shopID_len / thread)
 
