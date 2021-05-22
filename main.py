@@ -397,7 +397,7 @@ if __name__ == '__main__':
         config['headless'] = headless
         config['useUser'] = use_user
         config['threshold'] = threshold
-        config['is_get_voucher'] = is_get_voucher
+        config['isGetVoucher'] = is_get_voucher
         config['users'] = users
         json.dump(config, open(get_file_path("config.json"), "w"), indent=4, ensure_ascii=False)
         print_log("INFO", "结束运行", traceback.format_exc())
