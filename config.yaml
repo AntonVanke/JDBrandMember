@@ -1,0 +1,25 @@
+# cookie 格式: pt_key=******;pt_pin=****** 多个 cookie 请换行添加
+cookies:
+  - pt_key=******;pt_pin=******
+
+# 线程数量: 注意！不要超过 8 线程，否则可能会被京东临时静止访问
+thread: 4
+
+# 筛选
+screening:
+  bean: 8  # 最小获得京豆数少于此的不会获取
+  voucher: false  # 是否获取红包？true: 获取, false: 不获取。红包有有效期限！
+
+# 用户注册时所填写的信息
+register:
+  v_sex: 男  # 要求: 男 or 女
+  v_birthday: 2000-09-27  # 要求: yyyy-mm-dd
+  v_name: 康有为  # 要求: 1 - 10 个字符
+
+# 用户代理，可自行配置
+user-agent:
+  - Mozilla/5.0 (Linux; Android 9; COR-AL00) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.116 Mobile Safari/537.36 EdgA/46.03.4.5155
+  - okhttp/3.12.1;jdmall;android;version/10.0.1;build/88405;screen/1080x2250;os/9;network/wifi;
+
+# 获取 shop_id 的连接地址详见 main.py -> get_shopid()
+shop_id_url: https://fionjones.github.io/shopid.yaml
