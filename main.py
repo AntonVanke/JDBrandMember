@@ -25,8 +25,7 @@ def get_shopid():
     获取 shopid, 如果网络上的更新时间比本地早则使用本地的，其它则使用网络上的
     """
     try:
-        net_res = requests.get(CONFIG['shop_id_url'], timeout=30, headers=get_headers("", "github.com"))
-        print(net_res.text)
+        net_res = requests.get(CONFIG['shop_id_url'], timeout=30)
         if net_res.status_code != 200:
             raise Exception
     except:
@@ -88,7 +87,7 @@ def to_log(info_type="", title="", info=""):
 def get_headers(cookie, host):
     """
     返回请求头
-    :param cookie: 
+    :param cookie:
     :param host:
     :return:
     """
@@ -221,13 +220,16 @@ def bind_with_vender(cookie, shop_id, activity_id):
 
 
 def bind(cookie, thread):
+    global process
     for _ in shop_id_list[thread::CONFIG['thread']]:
         status, prize_name, discount, activity_id = get_shop_open_card_info(cookie, _)
-
+        process[0] += 1
         # 筛选条件
         if prize_name == "京豆" and int(discount) < CONFIG['screening']['bean']:
+            process[1] += discount
             return
         if prize_name == "元红包" and not CONFIG['screening']['voucher']:
+            process[2] += discount
             return
 
         if bind_with_vender(cookie, _, activity_id):
@@ -235,22 +237,29 @@ def bind(cookie, thread):
 
 
 def main():
+    global process
     for _ in CONFIG['cookies']:
+        process = [0, 0, 0]
         status, username, bean_num = get_user_info(_)
         if status:
             print(to_log("INFO", "账号名称: " + str(username) + " 现有京豆数量: " + str(bean_num)))
-
             for thread in range(CONFIG['thread']):
                 # xxx(cookie=_, shop_id_list=shop_id_list, thread=thread)
                 threading.Thread(target=bind, args=(_, thread,)).start()
+            while threading.active_count() != 1:
+                print("\r 账号:{}, 已尝试{}个店铺，获得{}京豆和{}元红包".format(username, process[0], process[1], process[2]), end="")
+                time.sleep(0.5)
         else:
             print(to_log("ERROR", "cookie失效", _[-15:]))
 
 
 if __name__ == '__main__':
     # 忽略警告
-    # requests.packages.urllib3.disable_warnings()
+    requests.packages.urllib3.disable_warnings()
+
     CONFIG = yaml.safe_load(open(get_file_path("config.yaml"), "r"))
+
+    process = [0, 0, 0]
     # 获取 shopid 列表
     shopid_status, shop_id_list = get_shopid()
     if not shopid_status:
