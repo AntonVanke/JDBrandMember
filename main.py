@@ -108,14 +108,14 @@ def get_user_info(cookie):
     """
     try:
         url = "https://me-api.jd.com/user_new/info/GetJDUserInfoUnion"
-        res = requests.get(url, headers=get_headers(cookie, "me-api.jd.com"))
+        res = requests.get(url, headers=get_headers(cookie, "me-api.jd.com"), verify=False)
         if res.status_code == 200 and res.json()["msg"] == "success":
             return True, res.json()["data"]["userInfo"]["baseInfo"]["nickname"], res.json()["data"]["assetInfo"][
                 "beanNum"]
         else:
             return False, None, None
     except:
-        to_log("ERROR", "获取用户信息错误", res.text)
+        to_log("ERROR", "获取用户信息错误", traceback.format_exc())
         return False, None, None
 
 
@@ -126,7 +126,7 @@ def get_venderId(shop_id):
     :return: bool: 是否成功, str: venderID
     """
     try:
-        res = requests.get("https://shop.m.jd.com/?shopId=" + str(shop_id))
+        res = requests.get("https://shop.m.jd.com/?shopId=" + str(shop_id), verify=False)
         _res = re.compile("venderId: '(\\d*)'").findall(res.text)
         if res.status_code == 200 and len(_res):
             return True, re.compile("venderId: '(\\d*)'").findall(res.text)[0]
@@ -134,7 +134,7 @@ def get_venderId(shop_id):
             # TODO: 如果获取不到 venderID 的错误
             return False, None
     except:
-        to_log("ERROR", "获取 venderId 错误", res.text)
+        to_log("ERROR", "获取 venderId 错误", traceback.format_exc())
         return False, None
 
 
@@ -159,7 +159,7 @@ def get_shop_open_card_info(cookie, shop_id):
         }
         host = "api.m.jd.com"
         url = "https://api.m.jd.com/client.action"
-        res = requests.get(url, params=params, headers=get_headers(cookie, host))
+        res = requests.get(url, params=params, headers=get_headers(cookie, host), verify=False)
 
         if res.status_code == 200 and res.json()['success']:
             if not res.json()['result']['userInfo']['openCardStatus'] and res.json()['result']['interestsRuleList'] \
@@ -175,7 +175,7 @@ def get_shop_open_card_info(cookie, shop_id):
                                interests_info['interestsInfo']['activityId']
         return False, None, None, None
     except:
-        to_log("ERROR", "获取店铺信息错误", res.text)
+        print(to_log("ERROR", "获取店铺信息错误", traceback.format_exc()))
         return False, None, None, None
 
 
@@ -206,7 +206,7 @@ def bind_with_vender(cookie, shop_id, activity_id):
         }
         host = "api.m.jd.com"
         url = "https://api.m.jd.com/client.action"
-        res = requests.get(url, params=params, headers=get_headers(cookie, host))
+        res = requests.get(url, params=params, headers=get_headers(cookie, host), verify=False)
         # TODO:
         #  {"code":0,"success":true,"busiCode":"210","message":"您的账户已经是本店会员","result":null}
         #  {"code":0,"success":true,"busiCode":"0","message":"加入店铺会员成功","result":{"headLine":"您已成功加入店铺会员","giftInfo":null,"interactActivityDTO":null}}
@@ -216,7 +216,7 @@ def bind_with_vender(cookie, shop_id, activity_id):
             # TODO: 记录没有入会成功的日志
             return False
     except:
-        to_log("ERROR", "入会错误", res.text)
+        to_log("ERROR", "入会错误", traceback.format_exc())
         return False
 
 
@@ -248,8 +248,9 @@ def main():
 
 
 if __name__ == '__main__':
+    # 忽略警告
+    # requests.packages.urllib3.disable_warnings()
     CONFIG = yaml.safe_load(open(get_file_path("config.yaml"), "r"))
-
     # 获取 shopid 列表
     shopid_status, shop_id_list = get_shopid()
     if not shopid_status:
