@@ -5,6 +5,8 @@ import sys
 import threading
 
 import time
+import traceback
+
 import yaml
 import requests
 import datetime
@@ -12,31 +14,42 @@ import datetime
 
 @atexit.register
 def _end():
-    print(to_log("INFO", "执行结束\n"))
+    if sys.exc_info()[0] is not None:
+        to_log("ERROR", "出现不可解决的错误", str(traceback.format_exc()))
+    else:
+        print(to_log("INFO", "执行结束\n"))
 
 
 def get_shopid():
     """
-    获取 shopid
-    :param stream:
-    :return: shopid 列表
+    获取 shopid, 如果网络上的更新时间比本地早则使用本地的，其它则使用网络上的
     """
     try:
-        net_res = requests.get(CONFIG['shop_id_url'])
+        net_res = requests.get(CONFIG['shop_id_url'], timeout=30, headers=get_headers("", "github.com"))
+        print(net_res.text)
         if net_res.status_code != 200:
             raise Exception
     except:
-        print(to_log("ERROR", "获取 shopid 失败"))
-    else:
-        open(get_file_path("shopid.yaml"), "w").write(net_res.text)
+        print(to_log("ERROR", "获取线上 shopid 失败"))
 
     if os.path.exists(get_file_path("shopid.yaml")):
-        res = yaml.safe_load(open(get_file_path("shopid.yaml"), "r"))
-        if (datetime.datetime.now() - datetime.datetime.strptime(str(res['update_time']), '%Y-%m-%d')).days > 3:
-            print(to_log("INFO", "shopid更新失败", "请检查是否异常"))
-        print(to_log("INFO", "shopid更新时间", str(res['update_time'])))
-        return True, res['shop_id']
-    return False, None
+        try:
+            res = yaml.safe_load(open(get_file_path("shopid.yaml"), "r"))
+        except:
+            os.remove(get_file_path("shopid.yaml"))
+            print(to_log("ERROR", "shopid.yaml损坏", "已经删除损坏文件，请重新打开"))
+            sys.exit()
+    try:
+        if (datetime.datetime.strptime(str(yaml.safe_load(net_res.text)['update_time']),
+                                       '%Y-%m-%d') - datetime.datetime.strptime(str(res['update_time']),
+                                                                                '%Y-%m-%d')).days > 0:
+            print(to_log("INFO", "已更新 shopid"))
+            res = yaml.safe_load(net_res.text)
+            open(get_file_path("shopid.yaml"), "w").write(net_res.text)
+    except:
+        pass
+    print(to_log("INFO", "shopid更新时间", str(res['update_time'])))
+    return True, res['shop_id']
 
 
 def get_timestamp():
@@ -93,11 +106,16 @@ def get_user_info(cookie):
     :type cookie: str
     :return: bool: 是否成功, str: 用户名, str: 用户金豆数量
     """
-    url = "https://me-api.jd.com/user_new/info/GetJDUserInfoUnion"
-    res = requests.get(url, headers=get_headers(cookie, "me-api.jd.com"))
-    if res.status_code == 200 and res.json()["msg"] == "success":
-        return True, res.json()["data"]["userInfo"]["baseInfo"]["nickname"], res.json()["data"]["assetInfo"]["beanNum"]
-    else:
+    try:
+        url = "https://me-api.jd.com/user_new/info/GetJDUserInfoUnion"
+        res = requests.get(url, headers=get_headers(cookie, "me-api.jd.com"))
+        if res.status_code == 200 and res.json()["msg"] == "success":
+            return True, res.json()["data"]["userInfo"]["baseInfo"]["nickname"], res.json()["data"]["assetInfo"][
+                "beanNum"]
+        else:
+            return False, None, None
+    except:
+        to_log("ERROR", "获取用户信息错误", res.text)
         return False, None, None
 
 
@@ -107,12 +125,16 @@ def get_venderId(shop_id):
     :param shop_id:
     :return: bool: 是否成功, str: venderID
     """
-    res = requests.get("https://shop.m.jd.com/?shopId=" + str(shop_id))
-    _res = re.compile("venderId: '(\\d*)'").findall(res.text)
-    if res.status_code == 200 and len(_res):
-        return True, re.compile("venderId: '(\\d*)'").findall(res.text)[0]
-    else:
-        # TODO: 如果获取不到 venderID 的错误
+    try:
+        res = requests.get("https://shop.m.jd.com/?shopId=" + str(shop_id))
+        _res = re.compile("venderId: '(\\d*)'").findall(res.text)
+        if res.status_code == 200 and len(_res):
+            return True, re.compile("venderId: '(\\d*)'").findall(res.text)[0]
+        else:
+            # TODO: 如果获取不到 venderID 的错误
+            return False, None
+    except:
+        to_log("ERROR", "获取 venderId 错误", res.text)
         return False, None
 
 
@@ -123,34 +145,38 @@ def get_shop_open_card_info(cookie, shop_id):
     :param shop_id:
     :return: bool: 是否成功, str: 奖励名称, str: 奖励数量, str: activityId
     """
-    status, venderId = get_venderId(shop_id)
-    if not status:
-        return False
-    params = {
-        "appid": "jd_shop_member",
-        "functionId": "getShopOpenCardInfo",
-        "body": '{"venderId":"' + venderId + '","channel":406}',
-        "client": "H5",
-        "clientVersion": "9.2.0",
-        "uuid": "88888"
-    }
-    host = "api.m.jd.com"
-    url = "https://api.m.jd.com/client.action"
-    res = requests.get(url, params=params, headers=get_headers(cookie, host))
+    try:
+        status, venderId = get_venderId(shop_id)
+        if not status:
+            return False
+        params = {
+            "appid": "jd_shop_member",
+            "functionId": "getShopOpenCardInfo",
+            "body": '{"venderId":"' + venderId + '","channel":406}',
+            "client": "H5",
+            "clientVersion": "9.2.0",
+            "uuid": "88888"
+        }
+        host = "api.m.jd.com"
+        url = "https://api.m.jd.com/client.action"
+        res = requests.get(url, params=params, headers=get_headers(cookie, host))
 
-    if res.status_code == 200 and res.json()['success']:
-        if not res.json()['result']['userInfo']['openCardStatus'] and res.json()['result']['interestsRuleList'] \
-                is not None:
-            for interests_info in res.json()['result']['interestsRuleList']:
-                if interests_info['prizeName'] == "京豆":
-                    # TODO: 这里判断获取京豆
-                    return True, interests_info['prizeName'], interests_info['discountString'], \
-                           interests_info['interestsInfo']['activityId']
-                elif interests_info['prizeName'] == "元红包":
-                    # TODO: 这里判断获取红包
-                    return True, interests_info['prizeName'], interests_info['discountString'], \
-                           interests_info['interestsInfo']['activityId']
-    return False, None, None, None
+        if res.status_code == 200 and res.json()['success']:
+            if not res.json()['result']['userInfo']['openCardStatus'] and res.json()['result']['interestsRuleList'] \
+                    is not None:
+                for interests_info in res.json()['result']['interestsRuleList']:
+                    if interests_info['prizeName'] == "京豆":
+                        # TODO: 这里判断获取京豆
+                        return True, interests_info['prizeName'], interests_info['discountString'], \
+                               interests_info['interestsInfo']['activityId']
+                    elif interests_info['prizeName'] == "元红包":
+                        # TODO: 这里判断获取红包
+                        return True, interests_info['prizeName'], interests_info['discountString'], \
+                               interests_info['interestsInfo']['activityId']
+        return False, None, None, None
+    except:
+        to_log("ERROR", "获取店铺信息错误", res.text)
+        return False, None, None, None
 
 
 def bind_with_vender(cookie, shop_id, activity_id):
@@ -161,32 +187,36 @@ def bind_with_vender(cookie, shop_id, activity_id):
     :param activity_id: 活动 id 重要!(如果没有这个就不能获得奖励)
     :return:
     """
-    status, venderId = get_venderId(shop_id)
-    if not status:
-        return False
-    # 请到 config.yaml 更改配置
-    params = {
-        "appid": "jd_shop_member",
-        "functionId": "bindWithVender",
-        "body": '{"venderId":"' + venderId + '","shopId":"' + str(
-            shop_id) + '","bindByVerifyCodeFlag":1,"registerExtend":{"v_sex":"' + CONFIG['register'][
-                    'v_sex'] + '","v_birthday":"' + str(CONFIG['register']['v_birthday']) + '","v_name":"' +
-                CONFIG['register']['v_name'] + '"},"writeChildFlag":0,"activityId":' + str(
-            activity_id) + ',"channel":406}',
-        "client": "H5",
-        "clientVersion": "9.2.0",
-        "uuid": "88888"
-    }
-    host = "api.m.jd.com"
-    url = "https://api.m.jd.com/client.action"
-    res = requests.get(url, params=params, headers=get_headers(cookie, host))
-    # TODO:
-    #  {"code":0,"success":true,"busiCode":"210","message":"您的账户已经是本店会员","result":null}
-    #  {"code":0,"success":true,"busiCode":"0","message":"加入店铺会员成功","result":{"headLine":"您已成功加入店铺会员","giftInfo":null,"interactActivityDTO":null}}
-    if res.json()["success"] and res.json()["result"]["giftInfo"] is not None:
-        return True
-    else:
-        # TODO: 记录没有入会成功的日志
+    try:
+        status, venderId = get_venderId(shop_id)
+        if not status:
+            return False
+        # 请到 config.yaml 更改配置
+        params = {
+            "appid": "jd_shop_member",
+            "functionId": "bindWithVender",
+            "body": '{"venderId":"' + venderId + '","shopId":"' + str(
+                shop_id) + '","bindByVerifyCodeFlag":1,"registerExtend":{"v_sex":"' + CONFIG['register'][
+                        'v_sex'] + '","v_birthday":"' + str(CONFIG['register']['v_birthday']) + '","v_name":"' +
+                    CONFIG['register']['v_name'] + '"},"writeChildFlag":0,"activityId":' + str(
+                activity_id) + ',"channel":406}',
+            "client": "H5",
+            "clientVersion": "9.2.0",
+            "uuid": "88888"
+        }
+        host = "api.m.jd.com"
+        url = "https://api.m.jd.com/client.action"
+        res = requests.get(url, params=params, headers=get_headers(cookie, host))
+        # TODO:
+        #  {"code":0,"success":true,"busiCode":"210","message":"您的账户已经是本店会员","result":null}
+        #  {"code":0,"success":true,"busiCode":"0","message":"加入店铺会员成功","result":{"headLine":"您已成功加入店铺会员","giftInfo":null,"interactActivityDTO":null}}
+        if res.json()["success"] and res.json()["result"]["giftInfo"] is not None:
+            return True
+        else:
+            # TODO: 记录没有入会成功的日志
+            return False
+    except:
+        to_log("ERROR", "入会错误", res.text)
         return False
 
 
