@@ -22,4 +22,4 @@ user-agent:
   - okhttp/3.12.1;jdmall;android;version/10.0.1;build/88405;screen/1080x2250;os/9;network/wifi;
 
 # 获取 shop_id 的连接地址详见 main.py -> get_shopid()
-shop_id_url: https://fionjones.github.io/shopid.yaml
+shop_id_url: https://antonvanke.github.io/JDBrandMember/shopid.yaml

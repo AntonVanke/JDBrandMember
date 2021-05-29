@@ -64,12 +64,20 @@
     user-agent:
         - Mozilla/5.0
     # 获取 shop_id 的连接地址详见 main.py -> get_shopid()
-    shop_id_url: https://fionjones.github.io/shopid.yaml
+    shop_id_url: https://antonvanke.github.io/JDBrandMember/shopid.yaml
     ```
     
 4.  运行
 
     >   `python main.py`
+    
+5.  出现错误怎么办？
+
+    >   你可以提交`Issue`报告给我
+    >
+    >   注意： 
+    >
+    >   在境外服务器可能存在失败的情况，尤其是`Github actions`
 
 ## 运行截图
 

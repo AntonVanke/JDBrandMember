@@ -1,3 +1,5 @@
+ [返回 README](../README.md) 
+
 ##  怎么生成shopid.yaml
 
 假设你的`Cookie`是`pt_key=123465abc;pt_pin=jd_123987`
@@ -20,7 +22,7 @@ COOKIE = "" or "pt_key=" + sys.argv[1] + ";pt_pin=" + sys.argv[2]
 COOKIE = "pt_key=123465abc;pt_pin=jd_123987" or "pt_key=" + sys.argv[1] + ";pt_pin=" + sys.argv[2]
 ```
 
-那么就会在同级目录生成`shopid.yaml`，你可以将这个用于遍历。
+那么就会在同级目录生成`shopid.yaml`，你可以将这个用于遍历。一般来说`https://antonvanke.github.io/JDBrandMember/shopid.yaml`是更新日最全的
 
 **注**：生成的`shopid.yaml`在`tools`目录下，你可能需要移动到项目根目录才能用于遍历
 
