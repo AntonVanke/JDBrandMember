@@ -147,7 +147,7 @@ def get_shop_open_card_info(cookie, shop_id):
     try:
         status, venderId = get_venderId(shop_id)
         if not status:
-            return False
+            return False, None, None, None
         params = {
             "appid": "jd_shop_member",
             "functionId": "getShopOpenCardInfo",
@@ -165,11 +165,11 @@ def get_shop_open_card_info(cookie, shop_id):
                     is not None:
                 for interests_info in res.json()['result']['interestsRuleList']:
                     if interests_info['prizeName'] == "京豆":
-                        # TODO: 这里判断获取京豆
+                        process[1] += int(interests_info['discountString'])
                         return True, interests_info['prizeName'], interests_info['discountString'], \
                                interests_info['interestsInfo']['activityId']
                     elif interests_info['prizeName'] == "元红包":
-                        # TODO: 这里判断获取红包
+                        process[2] += int(interests_info['discountString'])
                         return True, interests_info['prizeName'], interests_info['discountString'], \
                                interests_info['interestsInfo']['activityId']
         return False, None, None, None
@@ -226,10 +226,8 @@ def bind(cookie, thread):
         process[0] += 1
         # 筛选条件
         if prize_name == "京豆" and int(discount) < CONFIG['screening']['bean']:
-            process[1] += discount
             return
         if prize_name == "元红包" and not CONFIG['screening']['voucher']:
-            process[2] += discount
             return
 
         if bind_with_vender(cookie, _, activity_id):
@@ -251,6 +249,7 @@ def main():
                 time.sleep(0.5)
         else:
             print(to_log("ERROR", "cookie失效", _[-15:]))
+        print("\r 账号:{}, 共尝试{}个店铺，共获得{}京豆和{}元红包".format(username, process[0], process[1], process[2]), end="")
 
 
 if __name__ == '__main__':

@@ -71,6 +71,14 @@
 
     >   `python main.py`
 
+## 运行截图
+
+![](docs/_images/FDB9C153889F569D4B67F05EEF405D91.jpg)
+
+## Tools
+
+`tools/traversal.py`: 用于生成`shopid.yaml`你可以访问[怎么更新shopid.yaml](docs/HOW_TO_UPDATE_SHOPID.md) 查看说明
+
 ## LICENSE
 
 >   MIT License
