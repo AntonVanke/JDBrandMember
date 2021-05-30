@@ -101,7 +101,7 @@ def _get_shop_open_card_info(cookie, shop_id):
 
 @atexit.register
 def over():
-    print("\n共遍历{}个店铺，其中包含{}京豆和{}红包的入会奖励，结果保存至`./shopid.yaml`".format(process[0], process[1], process[2]))
+    print("\n共遍历{}个店铺，其中包含{}京豆和{}元红包的入会奖励，结果保存至`./shopid.yaml`".format(process[0], process[1], process[2]))
     res = {
         "update_time": str(datetime.date.today()),
         "shop_id": list(set(SHOP_ID))
