@@ -255,7 +255,9 @@ def main():
 if __name__ == '__main__':
     # 忽略警告
     requests.packages.urllib3.disable_warnings()
-
+    if not os.path.exists(get_file_path("config.yaml")):
+        print(to_log("ERROR", "未找到配置`config.yaml`", "请查看 https://github.com/AntonVanke/JDBrandMember"))
+        sys.exit()
     CONFIG = yaml.safe_load(open(get_file_path("config.yaml"), "r"))
 
     process = [0, 0, 0]
