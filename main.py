@@ -14,10 +14,8 @@ import datetime
 
 @atexit.register
 def _end():
-    if sys.exc_info()[0] is not None:
-        to_log("ERROR", "出现不可解决的错误", str(traceback.format_exc()))
-    else:
-        print(to_log("INFO", "执行结束\n"))
+    end_time = time.time()
+    print(to_log("INFO", "执行结束", "执行耗时{:.3f}s".format(end_time - start_time)))
 
 
 def get_shopid():
@@ -33,7 +31,7 @@ def get_shopid():
 
     if os.path.exists(get_file_path("shopid.yaml")):
         try:
-            res = yaml.safe_load(open(get_file_path("shopid.yaml"), "r"))
+            res = yaml.safe_load(open(get_file_path("shopid.yaml"), "r", encoding="utf-8"))
         except:
             os.remove(get_file_path("shopid.yaml"))
             print(to_log("ERROR", "shopid.yaml损坏", "已经删除损坏文件，请重新打开"))
@@ -44,7 +42,7 @@ def get_shopid():
                                                                                 '%Y-%m-%d')).days > 0:
             print(to_log("INFO", "已更新 shopid"))
             res = yaml.safe_load(net_res.text)
-            open(get_file_path("shopid.yaml"), "w").write(net_res.text)
+            open(get_file_path("shopid.yaml"), "w", encoding="utf-8").write(net_res.text)
     except:
         pass
     print(to_log("INFO", "shopid更新时间", str(res['update_time'])))
@@ -249,16 +247,17 @@ def main():
                 time.sleep(0.5)
         else:
             print(to_log("ERROR", "cookie失效", _[-15:]))
-        print("\r 账号:{}, 共尝试{}个店铺，共获得{}京豆和{}元红包".format(username, process[0], process[1], process[2]), end="")
+        print(to_log("INFO", "账号{}".format(username), "共尝试{}个店铺，共获得{}京豆和{}元红包\n".format(process[0], process[1], process[2])))
 
 
 if __name__ == '__main__':
+    start_time = time.time()
     # 忽略警告
     requests.packages.urllib3.disable_warnings()
     if not os.path.exists(get_file_path("config.yaml")):
         print(to_log("ERROR", "未找到配置`config.yaml`", "请查看 https://github.com/AntonVanke/JDBrandMember"))
         sys.exit()
-    CONFIG = yaml.safe_load(open(get_file_path("config.yaml"), "r"))
+    CONFIG = yaml.safe_load(open(get_file_path("config.yaml"), "r", encoding="utf-8"))
 
     process = [0, 0, 0]
     # 获取 shopid 列表
