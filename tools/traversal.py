@@ -14,7 +14,7 @@ import re
 import requests
 import yaml
 
-THREAD = 6
+THREAD = 8
 # 这里填写遍历的 cookie， 如果你想分享 shopid.yaml 给他人使用，那么建议你不要使用刷过京豆的账号，否则会有遗漏
 COOKIE = "" or "pt_key=" + sys.argv[1] + ";pt_pin=" + sys.argv[2]
 SHOP_ID = []
