@@ -222,32 +222,39 @@ def bind(cookie, thread):
     for _ in shop_id_list[thread::CONFIG['thread']]:
         status, prize_name, discount, activity_id = get_shop_open_card_info(cookie, _)
         process[0] += 1
-        # 筛选条件
-        if prize_name == "京豆" and int(discount) < CONFIG['screening']['bean']:
-            return
-        if prize_name == "元红包" and not CONFIG['screening']['voucher']:
-            return
+        if status:
+            # 筛选条件
+            if prize_name == "京豆" and int(discount) < CONFIG['screening']['bean']:
+                return
+            if prize_name == "元红包" and not CONFIG['screening']['voucher']:
+                return
 
-        if bind_with_vender(cookie, _, activity_id):
-            print(to_log("INFO", "开卡成功", "在" + str(_) + "获得 " + str(discount) + prize_name))
+            if bind_with_vender(cookie, _, activity_id):
+                print(to_log("INFO", "开卡成功", "在" + str(_) + "获得 " + str(discount) + prize_name))
+
 
 
 def main():
-    global process
-    for _ in CONFIG['cookies']:
-        process = [0, 0, 0]
-        status, username, bean_num = get_user_info(_)
-        if status:
-            print(to_log("INFO", "账号名称: " + str(username) + " 现有京豆数量: " + str(bean_num)))
-            for thread in range(CONFIG['thread']):
-                # xxx(cookie=_, shop_id_list=shop_id_list, thread=thread)
-                threading.Thread(target=bind, args=(_, thread,)).start()
-            while threading.active_count() != 1:
-                print("\r 账号:{}, 已尝试{}个店铺，获得{}京豆和{}元红包".format(username, process[0], process[1], process[2]), end="")
-                time.sleep(0.5)
-        else:
-            print(to_log("ERROR", "cookie失效", _[-15:]))
-        print(to_log("INFO", "账号{}".format(username), "共尝试{}个店铺，共获得{}京豆和{}元红包\n".format(process[0], process[1], process[2])))
+    try:
+        global process
+        for _ in CONFIG['cookies']:
+            process = [0, 0, 0]
+            status, username, bean_num = get_user_info(_)
+            if status:
+                print(to_log("INFO", "账号名称: " + str(username) + " 现有京豆数量: " + str(bean_num)))
+                for thread in range(CONFIG['thread']):
+                    # xxx(cookie=_, shop_id_list=shop_id_list, thread=thread)
+                    threading.Thread(target=bind, args=(_, thread,)).start()
+                while threading.active_count() != 1:
+                    print("\r 账号:{}, 已尝试{}个店铺，获得{}京豆和{}元红包".format(username, process[0], process[1], process[2]),
+                          end="")
+                    time.sleep(0.5)
+            else:
+                print(to_log("ERROR", "cookie失效", _[-15:]))
+            print(to_log("INFO", "账号{}".format(username),
+                         "共尝试{}个店铺，共获得{}京豆和{}元红包\n".format(process[0], process[1], process[2])))
+    except:
+        print(to_log("ERROR", "运行错误", "在" + traceback.format_exc()))
 
 
 if __name__ == '__main__':
