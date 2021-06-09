@@ -224,7 +224,7 @@ def bind(cookie, thread):
         process[0] += 1
         if status:
             # 筛选条件
-            if prize_name == "京豆" and int(discount) < CONFIG['screening']['bean']:
+            if prize_name == "京豆" and int(discount) < int(CONFIG['screening']['bean']):
                 return
             if prize_name == "元红包" and not CONFIG['screening']['voucher']:
                 return
