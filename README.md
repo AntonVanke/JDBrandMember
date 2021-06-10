@@ -11,8 +11,8 @@
 
 ### 你需要
 
-1.  电脑知道如何安装`Python`环境；手机知道该如何在`Termux`上安装`Python`环境，或者在`ios`上安装`Pythonista`
-    1.  电脑访问 [Python Mirror (taobao.org)](https://npm.taobao.org/mirrors/python/) 安装`Python`
+1.  电脑知道如何安装`Python3`环境；手机知道该如何在`Termux`上安装`Python3`环境，或者在`ios`上安装`Pythonista`
+    1.  电脑访问 [Python Mirror (taobao.org)](https://npm.taobao.org/mirrors/python/) 安装`Python3`
     2.  安卓手机在各大应用商店搜索`Termux`安装后执行`pkg install python`
 2.  会获取京东账号的`cookie`即`pt_key=ABC;pt_pin=123`
 
@@ -44,7 +44,7 @@
 
 2.  安装所需的包
 
-    `pip install -r requirements.txt`
+    `pip3 install -r requirements.txt`
 
 3.  配置`config.yaml`
 
@@ -81,7 +81,7 @@
     
 4.  运行
 
-    >   `python main.py`
+    >   `python3 main.py`
     
 5.  出现错误怎么办？
 

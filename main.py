@@ -231,7 +231,7 @@ def bind(cookie, thread):
 
             if bind_with_vender(cookie, _, activity_id):
                 print(to_log("INFO", "开卡成功", "在" + str(_) + "获得 " + str(discount) + prize_name))
-
+            time.sleep(int(CONFIG.get("sleep-time", 0)))
 
 
 def main():
