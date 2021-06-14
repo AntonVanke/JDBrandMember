@@ -10,6 +10,7 @@ sleep-time: 0
 
 # 筛选
 screening:
+  use: shopid.yaml
   bean: 0  # 最小获得京豆数少于此的不会获取
   voucher: true  # 是否获取红包？true: 获取, false: 不获取。红包有有效期限！
 

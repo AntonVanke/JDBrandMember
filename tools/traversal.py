@@ -106,11 +106,11 @@ def over():
         "update_time": str(datetime.date.today()),
         "shop_id": list(set(SHOP_ID))
     }
-    yaml.safe_dump(res, open(get_file_path("shopid.yaml"), "w"))
+    yaml.safe_dump(res, open(get_file_path("shopid.yaml"), "w", encoding="utf-8"))
 
 
 if __name__ == '__main__':
-    shop_ids = open(get_file_path("shopid.txt"), "r").readlines()
+    shop_ids = yaml.safe_load(open("all_shopid.yaml", "r", encoding="utf-8"))['shop_id']
 
     process = [0, 0, 0]
 

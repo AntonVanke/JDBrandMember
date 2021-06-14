@@ -22,6 +22,7 @@ def get_shopid():
     """
     获取 shopid, 如果网络上的更新时间比本地早则使用本地的，其它则使用网络上的
     """
+    use_file = CONFIG["screening"].get("use", "shopid.yaml")
     try:
         net_res = requests.get(CONFIG['shop_id_url'], timeout=30)
         if net_res.status_code != 200:
@@ -29,11 +30,11 @@ def get_shopid():
     except:
         print(to_log("ERROR", "获取线上 shopid 失败"))
 
-    if os.path.exists(get_file_path("shopid.yaml")):
+    if os.path.exists(get_file_path(use_file)):
         try:
-            res = yaml.safe_load(open(get_file_path("shopid.yaml"), "r", encoding="utf-8"))
+            res = yaml.safe_load(open(get_file_path(use_file), "r", encoding="utf-8"))
         except:
-            os.remove(get_file_path("shopid.yaml"))
+            os.remove(get_file_path(use_file))
             print(to_log("ERROR", "shopid.yaml损坏", "已经删除损坏文件，请重新打开"))
             sys.exit()
     try:
@@ -42,7 +43,7 @@ def get_shopid():
                                                                                 '%Y-%m-%d')).days > 0:
             print(to_log("INFO", "已更新 shopid"))
             res = yaml.safe_load(net_res.text)
-            open(get_file_path("shopid.yaml"), "w", encoding="utf-8").write(net_res.text)
+            open(get_file_path(use_file), "w", encoding="utf-8").write(net_res.text)
     except:
         pass
     print(to_log("INFO", "shopid更新时间", str(res['update_time'])))
