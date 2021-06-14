@@ -110,7 +110,7 @@ def over():
 
 
 if __name__ == '__main__':
-    shop_ids = yaml.safe_load(open("all_shopid.yaml", "r", encoding="utf-8"))['shop_id']
+    shop_ids = yaml.safe_load(open(get_file_path("all_shopid.yaml"), "r", encoding="utf-8"))['shop_id']
 
     process = [0, 0, 0]
 
